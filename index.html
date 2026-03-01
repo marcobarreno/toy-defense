@@ -117,7 +117,7 @@ const START_MONEY = 150;
 const START_LIVES = 20;
 const SELL_RATIO = 0.6;
 const PROJ_SPEED = 10;       // cells/sec
-const SPAWN_INTERVAL = 0.7;  // seconds between spawns
+const SPAWN_INTERVAL = 0.55; // seconds between spawns
 
 const TOWER_DEFS = {
   block: {
@@ -153,10 +153,11 @@ const TOWER_DEFS = {
 };
 
 const ENEMY_DEFS = {
-  soldier: { name: 'Soldier',  hp: 50,  speed: 1.2, reward: 10, color: '#C0392B', radius: 0.28 },
-  car:     { name: 'Toy Car',  hp: 35,  speed: 2.2, reward: 15, color: '#2980B9', radius: 0.26 },
-  bear:    { name: 'Teddy',    hp: 150, speed: 0.7, reward: 25, color: '#8B4513', radius: 0.35 },
-  duck:    { name: 'Duck Boss', hp: 500, speed: 0.45, reward: 75, color: '#F1C40F', radius: 0.42 },
+  soldier: { name: 'Soldier',  hp: 50,  speed: 1.2, reward: 5,  color: '#C0392B', radius: 0.28 },
+  car:     { name: 'Toy Car',  hp: 35,  speed: 2.2, reward: 8,  color: '#2980B9', radius: 0.26 },
+  robot:   { name: 'Robot',    hp: 200, speed: 1.0, reward: 15, color: '#7F8C8D', radius: 0.30 },
+  bear:    { name: 'Teddy',    hp: 150, speed: 0.7, reward: 12, color: '#8B4513', radius: 0.35 },
+  duck:    { name: 'Duck Boss', hp: 500, speed: 0.45, reward: 40, color: '#F1C40F', radius: 0.42 },
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -442,7 +443,7 @@ class Particle {
 
 function generateWave(waveNum) {
   const list = [];
-  const hpMul = 1 + (waveNum - 1) * 0.12;
+  const hpMul = Math.pow(1.10, waveNum - 1);
 
   // Soldiers every wave
   const soldiers = Math.floor(4 + waveNum * 1.5);
@@ -450,13 +451,19 @@ function generateWave(waveNum) {
 
   // Cars from wave 3
   if (waveNum >= 3) {
-    const cars = Math.floor((waveNum - 1) * 1.0);
+    const cars = Math.floor((waveNum - 1) * 1.2);
     for (let i = 0; i < cars; i++) list.push({ type: 'car', hpMul });
+  }
+
+  // Robots from wave 7
+  if (waveNum >= 7) {
+    const robots = Math.floor((waveNum - 5) * 0.6);
+    for (let i = 0; i < robots; i++) list.push({ type: 'robot', hpMul });
   }
 
   // Bears from wave 5
   if (waveNum >= 5) {
-    const bears = Math.floor((waveNum - 3) * 0.7);
+    const bears = Math.floor((waveNum - 3) * 0.9);
     for (let i = 0; i < bears; i++) list.push({ type: 'bear', hpMul });
   }
 
@@ -602,6 +609,18 @@ class Renderer {
         c.fillStyle = ec;
         c.beginPath(); c.arc(p.x - r * 0.65, p.y - r * 0.65, r * 0.35, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.arc(p.x + r * 0.65, p.y - r * 0.65, r * 0.35, 0, Math.PI * 2); c.fill();
+      } else if (e.type === 'robot') {
+        // Rivets
+        c.fillStyle = '#444';
+        c.beginPath(); c.arc(p.x - r * 0.4, p.y - r * 0.4, 1.5, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(p.x + r * 0.4, p.y - r * 0.4, 1.5, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(p.x - r * 0.4, p.y + r * 0.4, 1.5, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(p.x + r * 0.4, p.y + r * 0.4, 1.5, 0, Math.PI * 2); c.fill();
+        // Antenna
+        c.strokeStyle = '#555'; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(p.x, p.y - r); c.lineTo(p.x, p.y - r - 4); c.stroke();
+        c.fillStyle = '#E74C3C';
+        c.beginPath(); c.arc(p.x, p.y - r - 4, 1.5, 0, Math.PI * 2); c.fill();
       } else if (e.type === 'duck') {
         // Beak
         c.fillStyle = '#E67E22';
@@ -1070,7 +1089,7 @@ class Game {
 
     // Check wave complete
     if (this.waveQueue.length === 0 && this.enemies.length === 0) {
-      const bonus = 20 + this.wave * 5;
+      const bonus = 10 + this.wave * 3;
       this.money += bonus;
       this.state = 'idle';
       this.showBanner('Wave ' + this.wave + ' Clear! +$' + bonus);
