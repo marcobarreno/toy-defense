@@ -124,6 +124,16 @@ const SUITE = `
     ok(wave.some(function(e) { return e.type === 'bear'; }), 'should have bears');
   });
 
+  test('wave 6 has no robots yet', function() {
+    var wave = generateWave(6);
+    ok(!wave.some(function(e) { return e.type === 'robot'; }), 'no robots on wave 6');
+  });
+
+  test('wave 7 introduces robots', function() {
+    var wave = generateWave(7);
+    ok(wave.some(function(e) { return e.type === 'robot'; }), 'should have robots');
+  });
+
   test('wave 10 includes duck boss', function() {
     var wave = generateWave(10);
     ok(wave.some(function(e) { return e.type === 'duck'; }), 'should have a duck boss');
